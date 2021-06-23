@@ -15,7 +15,7 @@ jobs:
       
       - name: "Build"
         run: |
-          go build
+          go build -o main .
           echo "done!"
 
       - uses: "marvinpinto/action-automatic-releases@latest"
