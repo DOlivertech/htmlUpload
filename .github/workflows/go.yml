@@ -1,79 +1,47 @@
 # name: Build and Deploy application
 
-# on:
-#   push:
-#     branches: [ main, development, staging ]
-#   pull_request:
-#     branches: [ main, development, staging ]
+on:
+  push:
+    branches: [ main, development, staging ]
+  pull_request:
+    branches: [ main, development, staging ]
 
-# jobs:
-#    pre-release:
-#     name: "Pre Release"
-#     runs-on: "ubuntu-latest"
+jobs:
+   pre-release:
+    name: "Pre Release"
+    runs-on: ubuntu-latest
 
-#     steps:
-#       # ...
-#       - name: "Build & test"
-#         run: |
-#           echo "done!"
-
-#       - uses: "marvinpinto/action-automatic-releases@latest"
-#         with:
-#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#           automatic_release_tag: "latest"
-#           prerelease: true
-#           title: Pre-Release
-#           files: |
-#             LICENSE.txt
-#             *.jar
-
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#     - uses: actions/checkout@master
-#       - name: Deploy to AWS Elastic Beanstalk Prod
-#         if: github.ref == 'refs/heads/master'
-#         uses: Amraneze/aws-beanstalk-deploy@master
-#         with:
-#           region: ${{secrets.AWS_REGION}}
-#           environment_name: ${{secrets.ELASTIC_BEANSTALK_ENVIRONMENT_NAME}}
-#           application_name: ${{secrets.ELASTIC_BEANSTALK_APPLICATION_NAME}}
-#           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           s3_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
-#           s3_file_path: ${{ secrets.S3_FILE_PATH }}
-#           ebs_version_label: ELASTIC_BEANSTALK_VERSION_LABEL
-#           ebs_description: ELASTIC_BEANSTALK_DESCRIPTION
-#           ebs_wait_for_env_to_be_green: true
-#           updated_version_url: YOUR_API_CHECKPOINT
-#           expected_version: EXPECTED_VERSION_TO_BE_DEPLOYED
-#           use_same_version: true
-#           enable_debug: ${{ secrets.ENABLE_AWS_BS_DEPLOY_DEBUG }}
-#           use_same_version: true
-          
-          
-#       - uses: actions/checkout@master
-#       - name: Deploy to AWS Elastic Beanstalk Stage
-#         if: github.ref == 'refs/heads/master'
-#         uses: Amraneze/aws-beanstalk-deploy@master
-#         with:
-#           region: ${{secrets.AWS_REGION}}
-#           environment_name: ${{secrets.ELASTIC_BEANSTALK_ENVIRONMENT_NAME}}
-#           application_name: ${{secrets.ELASTIC_BEANSTALK_APPLICATION_NAME}}
-#           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           s3_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
-#           s3_file_path: ${{ secrets.S3_FILE_PATH }}
-#           ebs_version_label: ELASTIC_BEANSTALK_VERSION_LABEL
-#           ebs_description: ELASTIC_BEANSTALK_DESCRIPTION
-#           ebs_wait_for_env_to_be_green: true
-#           updated_version_url: YOUR_API_CHECKPOINT
-#           expected_version: EXPECTED_VERSION_TO_BE_DEPLOYED
-#           use_same_version: true
-#           enable_debug: ${{ secrets.ENABLE_AWS_BS_DEPLOY_DEBUG }}
-#           use_same_version: true
+    steps:
       
-      
+      - name: "Build"
+        run: |
+          go build
+          echo "done!"
 
-      
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.ref == 'refs/heads/main', 'refs/heads/development'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: Pre-Release
+          files: |
+            LICENSE.txt
+            *.jar
+            
+    deploy:
+    needs: pre-release
+     name: "Deploy to Netlify for staging"
+     runs-on: ubuntu-latest
+     
+     if: github.ref == 'refs/heads/staging'
+     steps:
+       - uses: jsmrcaga/action-netlify-deploy@v1.1.0
+         with:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.MY_TOKEN_SECRET }}
+          NETLIFY_DEPLOY_TO_PROD: true
+         run: |
+          echo "Deployed @ ${{netlifyURL.secrets}}"
+
+
 
